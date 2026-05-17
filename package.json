@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"node --watch server/index.js\" \"cd client && npm run dev\"",
+    "build": "cd client && npm install && npm run build",
+    "start": "NODE_ENV=production node server/index.js",
     "test:server": "node --test server/db.test.js server/grid.test.js",
     "install:all": "npm install && cd client && npm install"
   },

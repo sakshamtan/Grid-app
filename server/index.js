@@ -1,14 +1,25 @@
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 import { initDb, getAllCells, updateCell } from './db.js'
 import { buildGrid, canCapture, applyCapture, computeLeaderboard } from './grid.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const isProd = process.env.NODE_ENV === 'production'
 
 const app = express()
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
-  cors: { origin: 'http://localhost:5173', methods: ['GET', 'POST'] },
+  cors: isProd ? false : { origin: 'http://localhost:5173', methods: ['GET', 'POST'] },
 })
+
+if (isProd) {
+  const clientDist = join(__dirname, '../client/dist')
+  app.use(express.static(clientDist))
+  app.get('*', (_req, res) => res.sendFile(join(clientDist, 'index.html')))
+}
 
 const db = initDb()
 const grid = buildGrid(getAllCells(db))
@@ -59,5 +70,5 @@ io.on('connection', (socket) => {
   })
 })
 
-const PORT = 3001
+const PORT = process.env.PORT ?? 3001
 httpServer.listen(PORT, () => console.log(`Server on http://localhost:${PORT}`))
